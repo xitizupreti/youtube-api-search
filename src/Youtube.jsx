@@ -14,18 +14,34 @@ const Youtube = () => {
     setQuery(query);
     setLoading(true);
   };
-
+  const scroll = async () => {
+    try {
+      if (
+        window.innerHeight + document.documentElement.scrollTop + 1 >=
+        document.documentElement.scrollHeight
+      ) {
+        setNoOfResults((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    window.addEventListener("scroll", scroll);
+    return () => window.removeEventListener("scroll", scroll);
+  }, []);
   useEffect(() => {
     async function Data() {
       const response = await axios.get(
         `${url}?part=snippet&key=${process.env.REACT_APP_key}&q=${query}&maxResults=${noOfResults}`
       );
       const { items } = response.data;
-      setData(items);
+      setData((prev) => [...prev, ...items]);
+      scroll();
       setLoading(false);
     }
     Data();
-  }, [loading]);
+  }, [loading, noOfResults]);
 
   return (
     <>
@@ -39,17 +55,10 @@ const Youtube = () => {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search HERE.."
         />
-        <input
-          id="num"
-          type="number"
-          name="number"
-          value={noOfResults}
-          onChange={(e) => setNoOfResults(e.target.value)}
-        />
         <button className="but" type="submit">
           Search
         </button>
-      </form>{" "}
+      </form>
       {loading ? (
         <MagnifyingGlass
           visible={true}
@@ -63,7 +72,6 @@ const Youtube = () => {
         />
       ) : data.length < 1 ? (
         <div>
-          {" "}
           <MagnifyingGlass
             visible={true}
             height="100%"
